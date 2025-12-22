@@ -10,44 +10,32 @@ export DAYWALKER_STATUS_LOADED=1
 # │ Build Window Format
 # └─────────────────────────────────────────────────────────────────────────────
 build_window_format() {
-    local format=""
-    local is_current="${1:-false}"
+    local format=" "
 
+    # Icons first (bell, activity, zoomed) - consistent on all windows, normal text
+    format+="#{?window_bell_flag,󰂞 ,}"
+    format+="#{?window_activity_flag,󰋼 ,}"
+    format+="#{?window_zoomed_flag,󰁌 ,}"
+
+    # Window number (if enabled)
     if [[ "$window_number" == "true" ]]; then
-        format=" #I ${window_separator} "
-    else
-        format=" "
+        format+="#I ${window_separator} "
     fi
 
-    # Add pane mode indicator and window name
-    format+="#{?pane_in_mode,#{pane_mode}  ,}#W"
-
-    # Add bell indicator (!) - shows 󰂞 icon
-    if [[ "$is_current" == "false" ]]; then
-        format+="#{?window_bell_flag, #[fg=${warning}]󰂞,}"
-    fi
-
-    # Add activity indicator (#) - shows 󰋼 icon
-    if [[ "$is_current" == "false" ]]; then
-        format+="#{?window_activity_flag, #[fg=${primary}]󰋼,}"
-    fi
-
-    # Add zoomed indicator (Z)
-    format+="#{?window_zoomed_flag, 󰁌,}"
-
-    format+=" "
+    # Pane mode indicator and window name
+    format+="#{?pane_in_mode,#{pane_mode}  ,}#W "
 
     echo "$format"
 }
 
-# Build format for inactive windows (shows bell/activity)
+# Build format for inactive windows
 build_window_format_inactive() {
-    build_window_format "false"
+    build_window_format
 }
 
-# Build format for current window (no bell/activity needed)
+# Build format for current window (same format for consistency)
 build_window_format_current() {
-    build_window_format "true"
+    build_window_format
 }
 
 # ┌─────────────────────────────────────────────────────────────────────────────
