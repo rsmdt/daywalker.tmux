@@ -1,0 +1,84 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint:
+    name: Shellcheck
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run ShellCheck
+        uses: ludeeus/action-shellcheck@master
+        with:
+          scandir: './scripts'
+          additional_files: 'daywalker.tmux'
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install tmux
+        run: sudo apt-get update && sudo apt-get install -y tmux
+
+      - name: Verify scripts are executable
+        run: |
+          test -x daywalker.tmux
+          test -x scripts/daywalker.sh
+          test -x scripts/core/config.sh
+          test -x scripts/core/status.sh
+          test -x scripts/core/apply.sh
+          test -x scripts/modules/session.sh
+          test -x scripts/modules/git.sh
+          test -x scripts/modules/battery.sh
+          test -x scripts/modules/datetime.sh
+          test -x scripts/modules/jobs.sh
+          test -x scripts/modules/ssh.sh
+
+      - name: Source helper functions
+        run: |
+          source utils/helpers.sh
+          # Test get_tmux_option function exists
+          type get_tmux_option
+
+      - name: Validate theme files
+        run: |
+          source themes/dark.sh
+          test -n "$bg"
+          test -n "$fg"
+          test -n "$accent"
+
+          source themes/light.sh
+          test -n "$bg"
+          test -n "$fg"
+          test -n "$accent"
+
+      - name: Check for hardcoded paths
+        run: |
+          # Ensure no absolute user paths exist
+          ! grep -rE '/Users/|/home/[a-z]' --include="*.sh" --include="*.conf" .
+
+  syntax:
+    name: Bash Syntax
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check bash syntax
+        run: |
+          for file in daywalker.tmux scripts/*.sh scripts/core/*.sh scripts/modules/*.sh themes/*.sh utils/*.sh; do
+            if [[ -f "$file" ]]; then
+              echo "Checking $file..."
+              bash -n "$file"
+            fi
+          done

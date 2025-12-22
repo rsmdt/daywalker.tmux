@@ -1,0 +1,18 @@
+# ShellCheck configuration
+# https://github.com/koalaman/shellcheck/wiki/Directive
+
+# Use bash as the default shell
+shell=bash
+
+# Disable specific checks
+# SC2034: Variable appears unused (we export many variables for sourced scripts)
+# SC1090: Can't follow non-constant source (we use dynamic paths)
+# SC1091: Not following sourced file (external files)
+disable=SC2034,SC1090,SC1091
+
+# Enable optional checks
+enable=add-default-case
+enable=avoid-nullary-conditions
+enable=check-unassigned-uppercase
+enable=deprecate-which
+enable=quote-safe-variables
