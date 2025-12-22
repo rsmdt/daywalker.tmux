@@ -10,6 +10,9 @@ CURRENT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${CURRENT_DIR}/utils/helpers.sh"
 
 main() {
+    # Store plugin directory in tmux environment for wrapper files
+    tmux set-environment -g DAYWALKER_PLUGIN_DIR "${CURRENT_DIR}"
+
     local mode
     mode=$(get_tmux_option "@daywalker_variant" "dark")
 
