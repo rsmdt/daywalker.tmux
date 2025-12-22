@@ -79,4 +79,18 @@ apply_theme() {
     apply_keybindings
     apply_menu
     apply_menu_click
+
+    # ┌─────────────────────────────────────────────────────────────────────────
+    # │ Expose Color Variables
+    # └─────────────────────────────────────────────────────────────────────────
+    # Users can reference these in their own config: #{@daywalker_color_*}
+    tmux set -gq @daywalker_color_bg "$bg"
+    tmux set -gq @daywalker_color_fg "$fg"
+    tmux set -gq @daywalker_color_fg_muted "$fg_muted"
+    tmux set -gq @daywalker_color_primary "$primary"
+    tmux set -gq @daywalker_color_accent "$accent"
+    tmux set -gq @daywalker_color_warning "$warning"
+    tmux set -gq @daywalker_color_success "$success"
+    tmux set -gq @daywalker_color_border "$border"
+    tmux set -gq @daywalker_color_contrast "$contrast"
 }
