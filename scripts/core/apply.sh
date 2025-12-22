@@ -44,8 +44,8 @@ apply_theme() {
     tmux set -g window-status-style "fg=${fg_muted},bg=${bg}"
     tmux set -g window-status-format "$window_format_inactive"
 
-    # Active window (highlighted with background)
-    tmux set -g window-status-current-style "fg=${contrast},bg=${accent},bold"
+    # Active window (accent text, no background)
+    tmux set -g window-status-current-style "fg=${accent},bold"
     tmux set -g window-status-current-format "$window_format_current"
 
     # Enable activity/bell monitoring
