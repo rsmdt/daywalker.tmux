@@ -56,9 +56,9 @@ apply_theme() {
     tmux set -g visual-activity off
     tmux set -g visual-bell off
 
-    # Bell and activity
-    tmux set -g window-status-bell-style "fg=${bg},bg=${warning},bold"
-    tmux set -g window-status-activity-style "fg=${bg},bg=${primary}"
+    # Bell and activity (icons show in window format, no background highlight)
+    tmux set -g window-status-bell-style "fg=${fg_muted}"
+    tmux set -g window-status-activity-style "fg=${fg_muted}"
 
     # ┌─────────────────────────────────────────────────────────────────────────
     # │ Messages & Mode
