@@ -129,6 +129,61 @@ set -g @daywalker_time_format '%I:%M %p'  # "09:30 PM"
 set -g @daywalker_time_format '%H:%M:%S'  # "21:30:45"
 ```
 
+## Menu Options
+
+### `@daywalker_menu`
+
+Enable or disable the popup menu.
+
+| Value | Description |
+|-------|-------------|
+| `true` | Enable menu (default) |
+| `false` | Disable menu |
+
+### `@daywalker_menu_key`
+
+Keyboard shortcut to open the menu.
+
+- **Default:** `M-Up` (Alt+Up arrow)
+
+```bash
+set -g @daywalker_menu_key 'M-m'  # Use Alt+m instead
+```
+
+### `@daywalker_menu_click`
+
+Enable mouse click to open the menu.
+
+| Value | Description |
+|-------|-------------|
+| `true` | Enable click triggers (default) |
+| `false` | Disable click triggers |
+
+When enabled, the menu can be opened by:
+- **Left-click** on status-left (mode indicator `[N]`/`[P]` area)
+- **Right-click** anywhere on the status bar
+- **Middle-click** anywhere on the status bar
+
+### `@daywalker_menu_icon`
+
+Icon displayed in the status bar when using the `menu` module.
+
+- **Default:** `☰`
+
+```bash
+set -g @daywalker_menu_icon '󰍜'  # Alternative hamburger icon
+```
+
+### `@daywalker_menu_title`
+
+Title displayed at the top of the popup menu.
+
+- **Default:** ` Menu `
+
+```bash
+set -g @daywalker_menu_title ' Actions '
+```
+
 ## Complete Example
 
 ```bash
@@ -155,6 +210,27 @@ set -g @daywalker_time_format '%H:%M'
 set -g @plugin 'rsmdt/daywalker.tmux'
 ```
 
+## Runtime Theme Switching
+
+Switch themes at runtime without editing your configuration:
+
+```bash
+# Toggle between dark and light
+~/.tmux/plugins/daywalker.tmux/scripts/switch-theme.sh toggle
+
+# Switch to a specific theme
+~/.tmux/plugins/daywalker.tmux/scripts/switch-theme.sh dark
+~/.tmux/plugins/daywalker.tmux/scripts/switch-theme.sh light
+```
+
+### Theme Toggle Keybinding
+
+Add a keybinding to quickly toggle themes:
+
+```bash
+bind-key T run-shell '~/.tmux/plugins/daywalker.tmux/scripts/switch-theme.sh toggle'
+```
+
 ## With tmux-dark-notify
 
 For automatic theme switching based on macOS system appearance:
@@ -164,8 +240,34 @@ For automatic theme switching based on macOS system appearance:
 set -g @plugin 'rsmdt/daywalker.tmux'
 set -g @daywalker_variant 'dark'  # Initial variant
 
-# Auto-switch with dark-notify
+# Auto-switch with dark-notify (TPM default install path)
 set -g @plugin 'erikw/tmux-dark-notify'
-set -g @dark-notify-theme-path-light '$HOME/.config/tmux/plugins/daywalker.tmux/daywalker-light.conf'
-set -g @dark-notify-theme-path-dark '$HOME/.config/tmux/plugins/daywalker.tmux/daywalker-dark.conf'
+set -g @dark-notify-theme-path-light '~/.tmux/plugins/daywalker.tmux/daywalker-light.conf'
+set -g @dark-notify-theme-path-dark '~/.tmux/plugins/daywalker.tmux/daywalker-dark.conf'
+```
+
+> **Note:** TPM installs plugins to `~/.tmux/plugins/` by default. If you use a custom install path (e.g., `~/.config/tmux/plugins/`), adjust the paths accordingly.
+
+## Exposed Color Variables
+
+Daywalker exposes theme colors as tmux options. You can reference these in your own configuration:
+
+| Variable | Description |
+|----------|-------------|
+| `@daywalker_color_bg` | Background color |
+| `@daywalker_color_fg` | Foreground color |
+| `@daywalker_color_fg_muted` | Muted/secondary text |
+| `@daywalker_color_primary` | Primary accent (normal mode) |
+| `@daywalker_color_accent` | Highlight accent (active elements) |
+| `@daywalker_color_warning` | Warning color (prefix mode) |
+| `@daywalker_color_success` | Success color (messages) |
+| `@daywalker_color_border` | Border color |
+| `@daywalker_color_contrast` | Text on colored backgrounds |
+
+### Usage Example
+
+```bash
+# Reference daywalker colors in your own styling
+set -g popup-border-style "fg=#{@daywalker_color_border}"
+set -g copy-mode-match-style "bg=#{@daywalker_color_primary}"
 ```

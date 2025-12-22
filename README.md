@@ -81,7 +81,12 @@ Modules can be placed in `status-left`, `status-right`, or `status-centre`.
 
 ### Menu
 
-Press `M-Up` (or right-click the status bar) to open a popup menu with:
+Open the popup menu with any of these methods:
+- **Left-click** on the mode indicator `[N]`/`[P]` (status-left area)
+- **Right-click** anywhere on the status bar
+- **Press `M-Up`** (Alt+Up arrow)
+
+Menu includes:
 - Window operations (new, rename, kill)
 - Pane operations (split all directions, break, kill)
 - Session operations (new, rename, choose, kill)
@@ -139,14 +144,61 @@ set -g @daywalker_key_new_session 'M-n'
 set -g @daywalker_keybindings 'false'
 ```
 
-## Auto Dark/Light Switching
+## Theme Switching
 
-With [tmux-dark-notify](https://github.com/erikw/tmux-dark-notify) for macOS:
+### Runtime Switching
+
+Switch themes without editing your config:
 
 ```bash
+# Toggle between dark and light
+~/.tmux/plugins/daywalker.tmux/scripts/switch-theme.sh toggle
+
+# Switch to specific theme
+~/.tmux/plugins/daywalker.tmux/scripts/switch-theme.sh dark
+~/.tmux/plugins/daywalker.tmux/scripts/switch-theme.sh light
+```
+
+Optional keybinding for quick toggling:
+
+```bash
+bind-key T run-shell '~/.tmux/plugins/daywalker.tmux/scripts/switch-theme.sh toggle'
+```
+
+### Auto Dark/Light Switching (macOS)
+
+With [tmux-dark-notify](https://github.com/erikw/tmux-dark-notify):
+
+```bash
+# TPM installs plugins to ~/.tmux/plugins/
 set -g @plugin 'erikw/tmux-dark-notify'
-set -g @dark-notify-theme-path-light '$HOME/.config/tmux/plugins/daywalker.tmux/daywalker-light.conf'
-set -g @dark-notify-theme-path-dark '$HOME/.config/tmux/plugins/daywalker.tmux/daywalker-dark.conf'
+set -g @dark-notify-theme-path-light '~/.tmux/plugins/daywalker.tmux/daywalker-light.conf'
+set -g @dark-notify-theme-path-dark '~/.tmux/plugins/daywalker.tmux/daywalker-dark.conf'
+```
+
+> **Note:** If you installed to a different location (e.g., `~/.config/tmux/plugins/`), adjust the paths accordingly.
+
+## Color Variables
+
+Daywalker exposes theme colors as tmux options for use in your own configuration:
+
+| Variable | Description |
+|----------|-------------|
+| `@daywalker_color_bg` | Background color |
+| `@daywalker_color_fg` | Foreground color |
+| `@daywalker_color_fg_muted` | Muted/secondary text |
+| `@daywalker_color_primary` | Primary accent (normal mode) |
+| `@daywalker_color_accent` | Highlight accent (active elements) |
+| `@daywalker_color_warning` | Warning color (prefix mode) |
+| `@daywalker_color_success` | Success color (messages) |
+| `@daywalker_color_border` | Border color |
+| `@daywalker_color_contrast` | Text on colored backgrounds |
+
+Example usage:
+
+```bash
+# Use daywalker colors in your own styling
+set -g popup-border-style "fg=#{@daywalker_color_border}"
 ```
 
 ## Documentation
