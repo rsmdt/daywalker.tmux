@@ -8,21 +8,22 @@ export DAYWALKER_STATUS_LOADED=1
 
 # ┌─────────────────────────────────────────────────────────────────────────────
 # │ Build Window Format
+# │ Format: "1 | 󰂞 󰋼 nvim" (number | icons name)
 # └─────────────────────────────────────────────────────────────────────────────
 build_window_format() {
     local format=" "
 
-    # Icons first (bell, activity, zoomed) - consistent on all windows, normal text
-    format+="#{?window_bell_flag,󰂞 ,}"
-    format+="#{?window_activity_flag,󰋼 ,}"
-    format+="#{?window_zoomed_flag,󰁌 ,}"
-
-    # Window number (if enabled)
+    # 1. Window number (if enabled)
     if [[ "$window_number" == "true" ]]; then
         format+="#I ${window_separator} "
     fi
 
-    # Pane mode indicator and window name
+    # 2. Icons (bell, activity, zoomed) - consistent on all windows
+    format+="#{?window_bell_flag,󰂞 ,}"
+    format+="#{?window_activity_flag,󰋼 ,}"
+    format+="#{?window_zoomed_flag,󰁌 ,}"
+
+    # 3. Window name (with pane mode if active)
     format+="#{?pane_in_mode,#{pane_mode}  ,}#W "
 
     echo "$format"
