@@ -2,6 +2,9 @@
 # Daywalker Theme - Apply Settings
 # Applies all tmux configuration settings
 
+# shellcheck disable=SC2154
+# Variables are sourced from themes/*.sh and config.sh
+
 # Prevent double-sourcing
 [[ -n "$DAYWALKER_APPLY_LOADED" ]] && return 0
 export DAYWALKER_APPLY_LOADED=1

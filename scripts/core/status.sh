@@ -2,6 +2,9 @@
 # Daywalker Theme - Status Bar Building
 # Functions to build status-left, status-right, and window formats
 
+# shellcheck disable=SC2154,SC2153
+# Variables are sourced from themes/*.sh, config.sh, and daywalker.sh
+
 # Prevent double-sourcing
 [[ -n "$DAYWALKER_STATUS_LOADED" ]] && return 0
 export DAYWALKER_STATUS_LOADED=1
@@ -96,6 +99,9 @@ build_status_left() {
                 menu_icon=$(get_tmux_option "@daywalker_menu_icon" "☰")
                 output+="#[fg=${primary} bg=${bg}] ${menu_icon} "
                 ;;
+            *)
+                # Unknown module, skip
+                ;;
         esac
     done
 
@@ -160,6 +166,9 @@ build_status_right() {
                 local menu_icon
                 menu_icon=$(get_tmux_option "@daywalker_menu_icon" "☰")
                 output+="#[fg=${primary} bg=${bg}] ${menu_icon} "
+                ;;
+            *)
+                # Unknown module, skip
                 ;;
         esac
     done

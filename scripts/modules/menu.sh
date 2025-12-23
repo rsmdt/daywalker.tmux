@@ -2,6 +2,9 @@
 # Daywalker Theme - Menu Module
 # Clickable menu icon for the status bar
 
+# shellcheck disable=SC2154
+# Variables are sourced from themes/*.sh and daywalker.sh
+
 # ┌─────────────────────────────────────────────────────────────────────────────
 # │ Menu Module
 # │ Displays a clickable menu icon that opens the command menu

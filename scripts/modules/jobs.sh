@@ -3,6 +3,9 @@
 # Shows count of suspended/background jobs in the current pane's shell
 # Usage: jobs.sh <fg_color> <warning_color>
 
+# shellcheck disable=SC2009
+# Using ps|grep is intentional for compatibility
+
 fg="${1:-#a1aab8}"
 warning="${2:-#ffc777}"
 
@@ -21,14 +24,15 @@ if [[ "$(uname)" == "Darwin" ]]; then
 else
     # Linux: check /proc for stopped processes
     stopped_count=0
-    for child in /proc/"$pane_pid"/task/"$pane_pid"/children 2>/dev/null; do
-        if [[ -f "$child" ]]; then
-            while read -r child_pid; do
-                state=$(cat /proc/"$child_pid"/stat 2>/dev/null | awk '{print $3}')
+    children_file="/proc/${pane_pid}/task/${pane_pid}/children"
+    if [[ -f "$children_file" ]]; then
+        while read -r child_pid; do
+            if [[ -f "/proc/${child_pid}/stat" ]]; then
+                state=$(awk '{print $3}' "/proc/${child_pid}/stat" 2>/dev/null)
                 [[ "$state" == "T" ]] && ((stopped_count++))
-            done < "$child"
-        fi
-    done
+            fi
+        done < "$children_file"
+    fi
 
     # Fallback: use ps
     if [[ "$stopped_count" -eq 0 ]]; then
