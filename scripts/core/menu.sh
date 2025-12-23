@@ -57,7 +57,8 @@ get_menu_command() {
     local menu_title
     menu_title=$(get_tmux_option "@daywalker_menu_title" " Menu ")
 
-    echo "display-menu -T '$menu_title' -x M -y M \
+    # -x 0: left edge, -y S: below status bar
+    echo "display-menu -T '$menu_title' -x 0 -y S \
   ' New Window'                      c 'new-window' \
   ' Rename Window'                   r \"command-prompt -p 'Rename Window:' 'rename-window %%'\" \
   ' Kill Window'                     C 'kill-window' \

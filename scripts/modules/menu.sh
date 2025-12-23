@@ -34,12 +34,12 @@ apply_menu_click() {
     menu_cmd=$(get_menu_command)
 
     # Bind left-click on status-left (mode indicator area) to open menu
-    # This makes the [N]/[P] indicator and session icon clickable
-    tmux bind-key -n MouseDown1StatusLeft "$menu_cmd"
+    # Using MouseUp so menu persists after release
+    tmux bind-key -n MouseUp1StatusLeft "$menu_cmd"
 
     # Bind right-click anywhere on status bar to open menu
-    tmux bind-key -n MouseDown3Status "$menu_cmd"
+    tmux bind-key -n MouseUp3Status "$menu_cmd"
 
     # Bind middle-click as well for accessibility
-    tmux bind-key -n MouseDown2Status "$menu_cmd"
+    tmux bind-key -n MouseUp2Status "$menu_cmd"
 }
