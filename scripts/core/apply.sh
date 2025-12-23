@@ -48,17 +48,9 @@ apply_theme() {
     tmux set -g window-status-current-style "fg=${accent},bold"
     tmux set -g window-status-current-format "$window_format_current"
 
-    # Enable activity/bell monitoring
-    tmux set -g monitor-activity on
-    tmux set -g monitor-bell on
-    tmux set -g activity-action other
-    tmux set -g bell-action other
-    tmux set -g visual-activity off
-    tmux set -g visual-bell off
-
-    # Bell and activity (icons show in window format, no background highlight)
-    tmux set -g window-status-bell-style "fg=${fg_muted}"
-    tmux set -g window-status-activity-style "fg=${fg_muted}"
+    # Disable activity/bell monitoring (no icons shown)
+    tmux set -g monitor-activity off
+    tmux set -g monitor-bell off
 
     # ┌─────────────────────────────────────────────────────────────────────────
     # │ Messages & Mode
