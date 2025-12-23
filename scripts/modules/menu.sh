@@ -33,13 +33,6 @@ apply_menu_click() {
     local menu_cmd
     menu_cmd=$(get_menu_command)
 
-    # Bind left-click on status-left (mode indicator area) to open menu
-    # Using MouseUp so menu persists after release
-    tmux bind-key -n MouseUp1StatusLeft "$menu_cmd"
-
-    # Bind right-click anywhere on status bar to open menu
+    # Bind right-click on status bar to open menu
     tmux bind-key -n MouseUp3Status "$menu_cmd"
-
-    # Bind middle-click as well for accessibility
-    tmux bind-key -n MouseUp2Status "$menu_cmd"
 }
