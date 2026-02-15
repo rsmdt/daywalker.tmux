@@ -21,7 +21,7 @@ _build_menu_command() {
     cat <<MENU
 display-menu -T "${menu_title}" -x ${x_pos} -y ${y_pos} \\
   " New Window"                      c "new-window" \\
-  " Rename Window"                   r "display-popup -E -T ' Rename Window ' -w 40 -h 4 '${MODULES_DIR}/rename-popup.sh window'" \\
+  " Rename Window"                   r "display-popup -E -T ' Rename Window: #{window_name} ' -w 50 -h 3 '${MODULES_DIR}/rename-popup.sh window'" \\
   " Kill Window"                     C "confirm-before -p 'Kill window #{W}? (y/n)' kill-window" \\
   "" \\
   " New Pane Right"                  l "split-window -h -c '#{pane_current_path}'" \\
@@ -32,7 +32,7 @@ display-menu -T "${menu_title}" -x ${x_pos} -y ${y_pos} \\
   " Kill Pane"                       x "kill-pane" \\
   "" \\
   " New Session"                     n "new-session" \\
-  " Rename Session"                  R "display-popup -E -T ' Rename Session ' -w 40 -h 4 '${MODULES_DIR}/rename-popup.sh session'" \\
+  " Rename Session"                  R "display-popup -E -T ' Rename Session: #S ' -w 50 -h 3 '${MODULES_DIR}/rename-popup.sh session'" \\
   " Choose Session"                  s "display-popup -E -T ' Sessions ' -w 80% -h 80% '${MODULES_DIR}/session-picker.sh'" \\
   " Kill Other Session(s)"           X "confirm-before -p 'Kill all other sessions? (y/n)' 'kill-session -a'" \\
   " Kill Session"                    Q "confirm-before -p 'Kill session #{S}? (y/n)' kill-session" \\

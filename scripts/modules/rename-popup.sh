@@ -9,16 +9,12 @@ target="${1:-window}"
 
 case "$target" in
     window)
-        current=$(tmux display-message -p '#{window_name}')
-        printf "\033[2m Current: %s\033[0m\n" "$current"
         read -r -p " New name: " new_name
         if [[ -n "$new_name" ]]; then
             tmux rename-window "$new_name"
         fi
         ;;
     session)
-        current=$(tmux display-message -p '#S')
-        printf "\033[2m Current: %s\033[0m\n" "$current"
         read -r -p " New name: " new_name
         if [[ -n "$new_name" ]]; then
             tmux rename-session "$new_name"
