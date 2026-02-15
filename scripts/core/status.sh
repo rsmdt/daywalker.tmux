@@ -95,8 +95,6 @@ build_status_left() {
                 fi
                 ;;
             menu)
-                local menu_icon
-                menu_icon=$(get_tmux_option "@daywalker_menu_icon" "☰")
                 output+="#[fg=${primary} bg=${bg}] ${menu_icon} "
                 ;;
             *)
@@ -163,8 +161,6 @@ build_status_right() {
                 fi
                 ;;
             menu)
-                local menu_icon
-                menu_icon=$(get_tmux_option "@daywalker_menu_icon" "☰")
                 output+="#[fg=${primary} bg=${bg}] ${menu_icon} "
                 ;;
             *)

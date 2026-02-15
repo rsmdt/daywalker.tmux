@@ -2,80 +2,84 @@
 # Daywalker Theme - Menu
 # Configurable popup menu for common tmux operations
 
+# shellcheck disable=SC2154
+# Variables are sourced from config.sh
+
+# Prevent double-sourcing
+[[ -n "$DAYWALKER_MENU_LOADED" ]] && return 0
+export DAYWALKER_MENU_LOADED=1
+
 # ┌─────────────────────────────────────────────────────────────────────────────
-# │ Menu Configuration
+# │ Menu Items (single source of truth)
+# └─────────────────────────────────────────────────────────────────────────────
+
+# Build the full display-menu command with given position args.
+# Usage: _build_menu_command <x_arg> <y_arg>
+_build_menu_command() {
+    local x_pos="$1" y_pos="$2"
+
+    cat <<MENU
+display-menu -T "${menu_title}" -x ${x_pos} -y ${y_pos} \\
+  " New Window"                      c "new-window" \\
+  " Rename Window"                   r "command-prompt -p 'Rename Window:' 'rename-window %%'" \\
+  " Kill Window"                     C "confirm-before -p 'Kill window #{W}? (y/n)' kill-window" \\
+  "" \\
+  " New Pane Right"                  l "split-window -h -c '#{pane_current_path}'" \\
+  " New Pane Left"                   h "split-window -hb -c '#{pane_current_path}'" \\
+  " New Pane Down"                   j "split-window -v -c '#{pane_current_path}'" \\
+  " New Pane Up"                     k "split-window -vb -c '#{pane_current_path}'" \\
+  " Move Pane to New Window"         t "break-pane" \\
+  " Kill Pane"                       x "kill-pane" \\
+  "" \\
+  " New Session"                     n "new-session" \\
+  " Rename Session"                  R "command-prompt -p 'Rename Session:' 'rename-session %%'" \\
+  " Choose Session"                  s "display-popup -E -T ' Sessions ' -w 40 -h 15 '${MODULES_DIR}/session-picker.sh'" \\
+  " Kill Other Session(s)"           X "confirm-before -p 'Kill all other sessions? (y/n)' 'kill-session -a'" \\
+  " Kill Session"                    Q "confirm-before -p 'Kill session #{S}? (y/n)' kill-session" \\
+  "" \\
+  " Show Keybindings"                ? "list-keys -N" \\
+  "Close menu"                        q ""
+MENU
+}
+
+# ┌─────────────────────────────────────────────────────────────────────────────
+# │ Apply Menu Keyboard Binding
 # └─────────────────────────────────────────────────────────────────────────────
 
 apply_menu() {
-    local enable_menu menu_key menu_title
-    enable_menu=$(get_tmux_option "@daywalker_menu" "true")
-    menu_key=$(get_tmux_option "@daywalker_menu_key" "M-Up")
-    menu_title=$(get_tmux_option "@daywalker_menu_title" " Menu ")
-
-    if [[ "$enable_menu" != "true" ]]; then
+    if [[ "$menu_enabled" != "true" ]]; then
+        # Clean up any previous binding
+        tmux unbind-key -n "$menu_key" 2>/dev/null || true
+        local prev_key
+        prev_key=$(tmux show-option -gqv @_daywalker_bound_menu_key 2>/dev/null)
+        if [[ -n "$prev_key" ]]; then
+            tmux unbind-key -n "$prev_key" 2>/dev/null || true
+        fi
         return 0
     fi
 
-    # Build menu command - using heredoc for readability
+    # Clean up previous key if it changed
+    local prev_key
+    prev_key=$(tmux show-option -gqv @_daywalker_bound_menu_key 2>/dev/null)
+    if [[ -n "$prev_key" && "$prev_key" != "$menu_key" ]]; then
+        tmux unbind-key -n "$prev_key" 2>/dev/null || true
+    fi
+
+    # Bind menu to key (-x P -y P: position at cursor)
     local menu_cmd
-    menu_cmd=$(cat <<'MENU'
-display-menu -T " Menu " -x P -y P \
-  " New Window"                      c "new-window" \
-  " Rename Window"                   r "command-prompt -p 'Rename Window:' 'rename-window %%'" \
-  " Kill Window"                     C "kill-window" \
-  "" \
-  " New Pane Right"                  l "split-window -h -c '#{pane_current_path}'" \
-  " New Pane Left"                   h "split-window -hb -c '#{pane_current_path}'" \
-  " New Pane Down"                   j "split-window -v -c '#{pane_current_path}'" \
-  " New Pane Up"                     k "split-window -vb -c '#{pane_current_path}'" \
-  " Move Pane to New Window"         t "break-pane" \
-  " Kill Pane"                       x "kill-pane" \
-  "" \
-  " New Session"                     n "new-session" \
-  " Rename Session"                  R "command-prompt -p 'Rename Session:' 'rename-session %%'" \
-  " Choose Session"                  s "choose-session" \
-  " Kill Other Session(s)"           X "kill-session -a" \
-  " Kill Session"                    Q "kill-session" \
-  "" \
-  " Show Keybindings"                ? "list-keys -N" \
-  "Close menu"                        q ""
-MENU
-)
-
-    # Update title in command
-    menu_cmd="${menu_cmd/ Menu /$menu_title}"
-
-    # Bind menu to key
+    menu_cmd=$(_build_menu_command "P" "P")
     tmux bind-key -n "$menu_key" "$menu_cmd"
+
+    # Remember the bound key for future cleanup
+    tmux set -gq @_daywalker_bound_menu_key "$menu_key"
 }
 
 # ┌─────────────────────────────────────────────────────────────────────────────
 # │ Get Menu Command for Status Bar Click
-# │ Returns the menu command for use in mouse bindings
+# │ Returns the menu command string for use in mouse bindings
 # └─────────────────────────────────────────────────────────────────────────────
-get_menu_command() {
-    local menu_title
-    menu_title=$(get_tmux_option "@daywalker_menu_title" " Menu ")
 
+get_menu_command() {
     # -x 0: left edge, -y S: below status bar
-    echo "display-menu -T '$menu_title' -x 0 -y S \
-  ' New Window'                      c 'new-window' \
-  ' Rename Window'                   r \"command-prompt -p 'Rename Window:' 'rename-window %%'\" \
-  ' Kill Window'                     C 'kill-window' \
-  '' \
-  ' New Pane Right'                  l \"split-window -h -c '#{pane_current_path}'\" \
-  ' New Pane Left'                   h \"split-window -hb -c '#{pane_current_path}'\" \
-  ' New Pane Down'                   j \"split-window -v -c '#{pane_current_path}'\" \
-  ' New Pane Up'                     k \"split-window -vb -c '#{pane_current_path}'\" \
-  ' Move Pane to New Window'         t 'break-pane' \
-  ' Kill Pane'                       x 'kill-pane' \
-  '' \
-  ' New Session'                     n 'new-session' \
-  ' Rename Session'                  R \"command-prompt -p 'Rename Session:' 'rename-session %%'\" \
-  ' Choose Session'                  s 'choose-session' \
-  ' Kill Other Session(s)'           X 'kill-session -a' \
-  ' Kill Session'                    Q 'kill-session' \
-  '' \
-  ' Show Keybindings'                ? 'list-keys -N' \
-  'Close menu'                        q ''"
+    _build_menu_command "0" "S"
 }

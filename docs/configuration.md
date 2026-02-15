@@ -104,6 +104,7 @@ set -g @daywalker_status_right 'git,battery,datetime'
 | `user` | Username | Uses whoami |
 | `jobs` | Suspended jobs count | Shows when Ctrl+Z jobs exist |
 | `ssh` | SSH session indicator | Shows hostname when in SSH |
+| `menu` | Clickable menu icon | Opens menu on right-click |
 
 ## DateTime Options
 
@@ -160,9 +161,7 @@ Enable mouse click to open the menu.
 | `false` | Disable click triggers |
 
 When enabled, the menu can be opened by:
-- **Left-click** on status-left (mode indicator `[N]`/`[P]` area)
 - **Right-click** anywhere on the status bar
-- **Middle-click** anywhere on the status bar
 
 ### `@daywalker_menu_icon`
 

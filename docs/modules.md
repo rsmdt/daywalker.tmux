@@ -79,20 +79,14 @@ Location: `scripts/modules/ssh.sh`
 
 **Why it's useful**: Prevents accidentally running destructive commands on remote servers.
 
-## Window Indicators
+### Menu (`menu`)
 
-In addition to status modules, Daywalker adds visual indicators to window tabs:
+Displays a clickable icon in the status bar. When paired with the `@daywalker_menu_click` option, right-clicking the status bar opens the popup menu.
 
-### Bell Indicator (`󰂞`)
-Shows when a window has triggered a bell (e.g., command completion notification).
+- Icon: `☰` (configurable via `@daywalker_menu_icon`)
+- Color: Primary theme color
 
-### Activity Indicator (`󰋼`)
-Shows when a window has new output/activity.
-
-### Zoom Indicator (`󰁌`)
-Shows when the current pane is zoomed.
-
-These indicators appear automatically on inactive windows and require no configuration.
+The menu icon is purely visual — the click binding is handled separately by `apply_menu_click()`.
 
 ## Creating Custom Modules
 

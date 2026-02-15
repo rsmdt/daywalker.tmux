@@ -30,7 +30,7 @@ apply_theme() {
     tmux set -g status-style "fg=${fg},bg=${bg}"
     tmux set -g status-left-length 100
     tmux set -g status-right-length 100
-    tmux set -g status-justify right
+    tmux set -g status-justify "$window_position"
 
     # ┌─────────────────────────────────────────────────────────────────────────
     # │ Status Left & Right
@@ -43,7 +43,7 @@ apply_theme() {
     # └─────────────────────────────────────────────────────────────────────────
     tmux set -g window-status-separator " "
 
-    # Inactive windows (shows bell/activity indicators)
+    # Inactive windows
     tmux set -g window-status-style "fg=${fg_muted},bg=${bg}"
     tmux set -g window-status-format "$window_format_inactive"
 
@@ -69,13 +69,6 @@ apply_theme() {
     tmux set -g pane-active-border-style "fg=${accent}"
 
     # ┌─────────────────────────────────────────────────────────────────────────
-    # │ Keybindings & Menu
-    # └─────────────────────────────────────────────────────────────────────────
-    apply_keybindings
-    apply_menu
-    apply_menu_click
-
-    # ┌─────────────────────────────────────────────────────────────────────────
     # │ Expose Color Variables
     # └─────────────────────────────────────────────────────────────────────────
     # Users can reference these in their own config: #{@daywalker_color_*}
@@ -88,4 +81,16 @@ apply_theme() {
     tmux set -gq @daywalker_color_success "$success"
     tmux set -gq @daywalker_color_border "$border"
     tmux set -gq @daywalker_color_contrast "$contrast"
+
+    # ┌─────────────────────────────────────────────────────────────────────────
+    # │ Menu
+    # └─────────────────────────────────────────────────────────────────────────
+    # Menu styling (tmux 3.2+)
+    tmux set -g menu-style "fg=${fg},bg=${bg}"
+    tmux set -g menu-selected-style "fg=${contrast},bg=${accent}"
+    tmux set -g menu-border-style "fg=${border}"
+
+    # Menu bindings — isolated so failures don't abort theme application
+    apply_menu || true
+    apply_menu_click || true
 }

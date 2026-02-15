@@ -3,31 +3,16 @@
 # Clickable menu icon for the status bar
 
 # shellcheck disable=SC2154
-# Variables are sourced from themes/*.sh and daywalker.sh
-
-# ┌─────────────────────────────────────────────────────────────────────────────
-# │ Menu Module
-# │ Displays a clickable menu icon that opens the command menu
-# └─────────────────────────────────────────────────────────────────────────────
-
-render_menu() {
-    local icon
-    icon=$(get_tmux_option "@daywalker_menu_icon" "☰")
-
-    # The menu icon - clicking triggers the menu via mouse binding
-    # Mouse binding is set up in apply_menu_click()
-    echo "#[fg=${primary}]${icon}#[default]"
-}
+# Variables are sourced from themes/*.sh and config.sh
 
 # ┌─────────────────────────────────────────────────────────────────────────────
 # │ Setup Mouse Click Binding for Menu
-# │ Binds left-click on status-left/right to open menu at mouse position
+# │ Binds right-click on status bar to open menu
 # └─────────────────────────────────────────────────────────────────────────────
 apply_menu_click() {
-    local enable_menu_click
-    enable_menu_click=$(get_tmux_option "@daywalker_menu_click" "true")
-
-    if [[ "$enable_menu_click" != "true" ]]; then
+    if [[ "$menu_click_enabled" != "true" ]]; then
+        # Clean up any previous mouse binding
+        tmux unbind-key -n MouseUp3Status 2>/dev/null || true
         return 0
     fi
 
