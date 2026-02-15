@@ -21,7 +21,7 @@ _build_menu_command() {
     cat <<MENU
 display-menu -T "${menu_title}" -x ${x_pos} -y ${y_pos} \\
   " New Window"                      c "new-window" \\
-  " Rename Window"                   r "display-popup -E -T ' Rename Window ' -w 40 -h 4 -s 'fg=${fg},bg=${bg}' -S 'fg=${border}' '${MODULES_DIR}/rename-popup.sh window'" \\
+  " Rename Window"                   r "display-popup -E -T ' Rename Window ' -w 40 -h 4 '${MODULES_DIR}/rename-popup.sh window'" \\
   " Kill Window"                     C "confirm-before -p 'Kill window #{W}? (y/n)' kill-window" \\
   "" \\
   " New Pane Right"                  l "split-window -h -c '#{pane_current_path}'" \\
@@ -32,8 +32,8 @@ display-menu -T "${menu_title}" -x ${x_pos} -y ${y_pos} \\
   " Kill Pane"                       x "kill-pane" \\
   "" \\
   " New Session"                     n "new-session" \\
-  " Rename Session"                  R "display-popup -E -T ' Rename Session ' -w 40 -h 4 -s 'fg=${fg},bg=${bg}' -S 'fg=${border}' '${MODULES_DIR}/rename-popup.sh session'" \\
-  " Choose Session"                  s "display-popup -E -T ' Sessions ' -w 80% -h 80% -s 'fg=${fg},bg=${bg}' -S 'fg=${border}' '${MODULES_DIR}/session-picker.sh'" \\
+  " Rename Session"                  R "display-popup -E -T ' Rename Session ' -w 40 -h 4 '${MODULES_DIR}/rename-popup.sh session'" \\
+  " Choose Session"                  s "display-popup -E -T ' Sessions ' -w 80% -h 80% '${MODULES_DIR}/session-picker.sh'" \\
   " Kill Other Session(s)"           X "confirm-before -p 'Kill all other sessions? (y/n)' 'kill-session -a'" \\
   " Kill Session"                    Q "confirm-before -p 'Kill session #{S}? (y/n)' kill-session" \\
   "" \\
@@ -65,9 +65,9 @@ apply_menu() {
         tmux unbind-key -n "$prev_key" 2>/dev/null || true
     fi
 
-    # Bind menu to key (-x P -y P: position at cursor)
+    # Bind menu to key (-x 0 -y S: bottom-left, anchored to status bar)
     local menu_cmd
-    menu_cmd=$(_build_menu_command "P" "P")
+    menu_cmd=$(_build_menu_command "0" "S")
     tmux bind-key -n "$menu_key" "$menu_cmd"
 
     # Remember the bound key for future cleanup
