@@ -9,13 +9,13 @@ target="${1:-window}"
 
 case "$target" in
     window)
-        read -r -p " New name: " new_name
+        read -r -p "> " new_name
         if [[ -n "$new_name" ]]; then
             tmux rename-window "$new_name"
         fi
         ;;
     session)
-        read -r -p " New name: " new_name
+        read -r -p "> " new_name
         if [[ -n "$new_name" ]]; then
             tmux rename-session "$new_name"
         fi
