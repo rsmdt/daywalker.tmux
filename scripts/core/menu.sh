@@ -65,9 +65,9 @@ apply_menu() {
         tmux unbind-key -n "$prev_key" 2>/dev/null || true
     fi
 
-    # Bind menu to key (-x 0 -y S: bottom-left, anchored to status bar)
+    # Bind menu to key (-x 0 -y P: bottom-left of pane area)
     local menu_cmd
-    menu_cmd=$(_build_menu_command "0" "S")
+    menu_cmd=$(_build_menu_command "0" "P")
     tmux bind-key -n "$menu_key" "$menu_cmd"
 
     # Remember the bound key for future cleanup
