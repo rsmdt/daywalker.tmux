@@ -44,7 +44,6 @@ export bg fg fg_muted primary warning accent success border contrast
 # └─────────────────────────────────────────────────────────────────────────────
 source "${CORE_DIR}/config.sh"
 source "${CORE_DIR}/status.sh"
-source "${CORE_DIR}/keybindings.sh"
 source "${CORE_DIR}/menu.sh"
 source "${MODULES_DIR}/menu.sh"
 source "${CORE_DIR}/apply.sh"

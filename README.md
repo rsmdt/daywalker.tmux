@@ -1,13 +1,12 @@
 # 🌗 Daywalker for tmux
 
-A minimal, modular tmux theme with dark/light mode support, vim-style keybindings, and a popup menu.
+A minimal, modular tmux theme with dark/light mode support and a popup menu.
 
 ## Features
 
 - **Dark/Light modes** - Seamless switching based on system appearance
 - **Modular status bar** - Compose your status bar from available modules
-- **Vim-style keybindings** - Intuitive pane splitting and navigation
-- **Popup menu** - Quick access to common operations (`M-Up`)
+- **Popup menu** - Quick access to common operations
 - **Fully configurable** - Customize via tmux options
 - **Nerd Font icons** - Clean, modern appearance
 
@@ -38,12 +37,11 @@ run-shell ~/.config/tmux/plugins/daywalker.tmux/daywalker.tmux
 
 ## Modules
 
-Modules can be placed in `status-left`, `status-right`, or `status-centre`.
+Modules can be placed in `status-left` or `status-right`. The window list is positioned using `@daywalker_window_position`.
 
 | Module | Description | Example |
 |--------|-------------|---------|
 | `mode` | Normal/Prefix indicator | `[N]` `[P]` |
-| `windows` | Window list | `1:zsh 2:vim 3:node` |
 | `session` | Session name with optional dots | `󰆧 main • •` |
 | `datetime` | Date and time | `2024-12-22 14:30` |
 | `git` | Branch and status | ` main +2 ~1` |
@@ -54,52 +52,29 @@ Modules can be placed in `status-left`, `status-right`, or `status-centre`.
 | `ssh` | SSH session indicator | ` server` |
 | `menu` | Clickable menu icon | `☰` |
 
-## Keybindings
+## Menu
 
-### Vim-style Pane Splitting (prefix + key)
-
-| Key | Action |
-|-----|--------|
-| `h` | Split pane left |
-| `j` | Split pane down |
-| `k` | Split pane up |
-| `l` | Split pane right |
-
-### Quick Actions (no prefix needed)
-
-| Key | Action |
-|-----|--------|
-| `M-h` / `M-Left` | Previous window |
-| `M-l` / `M-Right` | Next window |
-| `S-M-Left` | Swap window left |
-| `S-M-Right` | Swap window right |
-| `M-x` | Kill pane |
-| `M-s` | Choose session |
-| `M-c` | New window |
-| `M-n` | New session |
-| `M-Up` | Open menu |
-
-### Menu
-
-Open the popup menu with any of these methods:
-- **Left-click** on the mode indicator `[N]`/`[P]` (status-left area)
+Open the popup menu with either method:
 - **Right-click** anywhere on the status bar
-- **Press `M-Up`** (Alt+Up arrow)
+- **Press `M-Up`** (Alt+Up arrow, configurable)
+
+Destructive operations (kill window/session) require confirmation.
 
 Menu includes:
 - Window operations (new, rename, kill)
 - Pane operations (split all directions, break, kill)
 - Session operations (new, rename, choose, kill)
-- Help (show keybindings)
+- Show keybindings
 
 ## Default Configuration
 
 ```bash
 set -g @daywalker_variant 'dark'                  # 'dark' or 'light'
 
-set -g @daywalker_status-left 'mode,session'      # Left modules
-set -g @daywalker_status-centre 'windows'         # Centre modules
-set -g @daywalker_status-right 'datetime'         # Right modules
+# Status bar modules
+set -g @daywalker_status_left 'mode,session'      # Left modules
+set -g @daywalker_status_right ''                 # Right modules (empty by default)
+set -g @daywalker_window_position 'right'         # Window list position: left, centre, right
 
 # Session & Window
 set -g @daywalker_session_icon '󰆧'
@@ -109,40 +84,41 @@ set -g @daywalker_show_window_number 'true'
 set -g @daywalker_date_format '%Y-%m-%d'
 set -g @daywalker_time_format '%H:%M'
 
-# Keybindings & Menu
-set -g @daywalker_keybindings 'true'              # Enable vim-style keybindings
+# Menu
 set -g @daywalker_menu 'true'                     # Enable popup menu
 set -g @daywalker_menu_key 'M-Up'                 # Menu trigger key
 set -g @daywalker_menu_click 'true'               # Right-click status bar for menu
-set -g @daywalker_menu_icon '☰'                   # Menu icon in status bar
 ```
 
-## Keybinding Configuration
+## Suggested Keybindings
 
-All keybindings can be customized:
+Daywalker focuses on theming. Add these vim-style keybindings to your `.tmux.conf` if desired:
 
 ```bash
-# Pane splitting (prefix + key)
-set -g @daywalker_key_split_left 'h'
-set -g @daywalker_key_split_right 'l'
-set -g @daywalker_key_split_up 'k'
-set -g @daywalker_key_split_down 'j'
+# Vim-style pane splitting (prefix + h/j/k/l)
+bind-key h split-window -hb -c "#{pane_current_path}"  # Split left
+bind-key l split-window -h -c "#{pane_current_path}"   # Split right
+bind-key k split-window -vb -c "#{pane_current_path}"  # Split up
+bind-key j split-window -v -c "#{pane_current_path}"   # Split down
 
-# Window navigation (no prefix)
-set -g @daywalker_key_prev_window 'M-h'
-set -g @daywalker_key_next_window 'M-l'
-set -g @daywalker_key_swap_window_left 'S-M-Left'
-set -g @daywalker_key_swap_window_right 'S-M-Right'
+# Window navigation (no prefix needed)
+bind-key -n M-h previous-window
+bind-key -n M-l next-window
+bind-key -n M-Left previous-window
+bind-key -n M-Right next-window
 
-# Quick actions (no prefix)
-set -g @daywalker_key_kill_pane 'M-x'
-set -g @daywalker_key_choose_tree 'M-s'
-set -g @daywalker_key_new_window 'M-c'
-set -g @daywalker_key_new_session 'M-n'
+# Swap windows
+bind-key -n S-M-Left run "tmux swap-window -d -t #{e|-|:#I,1}"
+bind-key -n S-M-Right run "tmux swap-window -d -t #{e|+|:#I,1}"
 
-# Disable keybindings entirely
-set -g @daywalker_keybindings 'false'
+# Quick actions (no prefix needed)
+bind-key -n M-x kill-pane
+bind-key -n M-s choose-tree
+bind-key -n M-c new-window -c "#{pane_current_path}"
+bind-key -n M-n new-session
 ```
+
+> **Tip:** For a more powerful keybinding experience with which-key style popups, check out [tmux-which-key](https://github.com/alexwforsythe/tmux-which-key).
 
 ## Theme Switching
 
