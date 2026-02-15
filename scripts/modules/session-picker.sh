@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Daywalker Theme - Session Picker
 # Interactive session switcher for use inside display-popup
-# Uses fzf when available, falls back to numbered list
+# Uses fzf (with preview) when available, falls back to numbered list
 
 set -e
 
@@ -16,14 +16,23 @@ if [[ -z "$sessions" ]]; then
     exit 0
 fi
 
+# Format: "session_name (N windows) [attached]"
+format_session() {
+    tmux list-sessions -F '#{session_name}|#{session_windows}|#{?session_attached,attached,}' \
+        | grep -v "^${current_session}|"
+}
+
 pick_with_fzf() {
     local selected
     selected=$(echo "$sessions" | fzf \
         --reverse \
         --no-info \
-        --header="Current: ${current_session}" \
-        --prompt="Switch to: " \
-        --border=none)
+        --header="  ${current_session} (current)" \
+        --prompt="> " \
+        --border=none \
+        --preview='tmux capture-pane -e -p -t {}:' \
+        --preview-window='right:60%:wrap' \
+        --preview-label=' Preview ')
     echo "$selected"
 }
 
@@ -34,11 +43,19 @@ pick_with_menu() {
     echo "Current: ${current_session}"
     echo ""
 
-    while IFS= read -r s; do
-        echo "  ${i}) ${s}"
-        session_array+=("$s")
+    while IFS='|' read -r name windows attached; do
+        local suffix=""
+        [[ -n "$attached" ]] && suffix=" (attached)"
+        echo "  ${i}) ${name}  ${windows} windows${suffix}"
+        session_array+=("$name")
         i=$((i + 1))
-    done <<< "$sessions"
+    done < <(format_session)
+
+    if [[ ${#session_array[@]} -eq 0 ]]; then
+        echo "No other sessions."
+        sleep 1
+        return
+    fi
 
     echo ""
     read -r -p "Switch to [1-$((i - 1))]: " choice
