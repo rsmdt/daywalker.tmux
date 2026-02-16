@@ -7,64 +7,58 @@ set -e
 
 current_session=$(tmux display-message -p '#S')
 
-# Reload command — used by fzf bindings after mutations
-RELOAD_CMD="tmux list-sessions -F '#{session_name}' | grep -v '^${current_session}$'"
+# List all sessions, marking the current one
+# Used by fzf bindings after mutations to reload the list
+RELOAD_CMD="tmux list-sessions -F '#{session_name}' | sed 's/^${current_session}\$/${current_session} (current)/'"
 
-# Get all sessions except the current one
 sessions=$(eval "$RELOAD_CMD" || true)
 
 if [[ -z "$sessions" ]]; then
-    echo "No other sessions."
+    echo "No sessions."
     sleep 1
     exit 0
 fi
 
 # Format: "session_name (N windows) [attached]"
 format_session() {
-    tmux list-sessions -F '#{session_name}|#{session_windows}|#{?session_attached,attached,}' \
-        | grep -v "^${current_session}|"
+    tmux list-sessions -F '#{session_name}|#{session_windows}|#{?session_attached,attached,}'
 }
 
 # shellcheck disable=SC2016
 pick_with_fzf() {
     local selected
-    local header
-    header="  ${current_session} (current)
-  ctrl-x kill  ctrl-n new  ctrl-r rename  ? toggle preview"
-
     selected=$(echo "$sessions" | fzf \
         --reverse \
         --no-info \
-        --header="$header" \
+        --header='? for help' \
         --prompt="> " \
         --border=none \
-        --preview='tmux capture-pane -e -p -t {}:' \
+        --delimiter=' ' \
+        --preview='tmux capture-pane -e -p -t {1}:' \
         --preview-window='right:60%:wrap' \
         --preview-label=' Preview ' \
-        --bind="ctrl-x:execute-silent(tmux kill-session -t {})+reload(${RELOAD_CMD})" \
+        --bind='?:change-header(ctrl-x kill · ctrl-n new · ctrl-r rename)' \
+        --bind="ctrl-x:execute-silent(tmux kill-session -t {1})+reload(${RELOAD_CMD})" \
         --bind="ctrl-n:execute-silent(tmux new-session -d)+reload(${RELOAD_CMD})" \
-        --bind='ctrl-r:execute(printf "New name: " && read -r name && [ -n "$name" ] && tmux rename-session -t {} "$name")+reload('"${RELOAD_CMD}"')' \
-        --bind='?:toggle-preview')
-    echo "$selected"
+        --bind='ctrl-r:execute(printf "New name: " && read -r name && [ -n "$name" ] && tmux rename-session -t {1} "$name")+reload('"${RELOAD_CMD}"')')
+    echo "${selected%% (current)}"
 }
 
 pick_with_menu() {
     local i=1
     local session_array=()
 
-    echo "Current: ${current_session}"
-    echo ""
-
     while IFS='|' read -r name windows attached; do
         local suffix=""
-        [[ -n "$attached" ]] && suffix=" (attached)"
+        [[ "$name" == "$current_session" ]] && suffix=" (current)"
+        [[ -n "$attached" ]] && suffix+=" [attached]"
         echo "  ${i}) ${name}  ${windows} windows${suffix}"
         session_array+=("$name")
         i=$((i + 1))
     done < <(format_session)
 
     if [[ ${#session_array[@]} -eq 0 ]]; then
-        echo "No other sessions."
+        echo "No sessions."
         sleep 1
         return
     fi
@@ -84,6 +78,6 @@ else
     target=$(pick_with_menu)
 fi
 
-if [[ -n "$target" ]]; then
+if [[ -n "$target" && "$target" != "$current_session" ]]; then
     tmux switch-client -t "$target"
 fi
