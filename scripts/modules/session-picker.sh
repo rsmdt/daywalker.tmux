@@ -78,6 +78,6 @@ else
     target=$(pick_with_menu)
 fi
 
-if [[ -n "$target" && "$target" != "$current_session" ]]; then
+if [[ -n "$target" ]]; then
     tmux switch-client -t "$target"
 fi
