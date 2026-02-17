@@ -57,11 +57,21 @@ _new_session() {
     fi
 }
 
+_create_session() {
+    local name="${1:-}"
+    if [[ -n "$name" ]]; then
+        tmux new-session -d -s "$name" && echo "$name"
+    else
+        tmux new-session -d -P -F '#{session_name}'
+    fi
+}
+
 # Handle subcommands
 case "${1:-}" in
-    --list)  _list_sessions; exit 0 ;;
-    --kill)  _kill_session "$2"; exit 0 ;;
-    --new)   _new_session; exit 0 ;;
+    --list)    _list_sessions; exit 0 ;;
+    --kill)    _kill_session "$2"; exit 0 ;;
+    --new)     _new_session; exit 0 ;;
+    --create)  _create_session "$2"; exit 0 ;;
 esac
 
 # ┌─────────────────────────────────────────────────────────────────────────────
@@ -88,16 +98,25 @@ pick_with_fzf() {
         --reverse \
         --no-info \
         --header='? for help' \
-        --prompt="> " \
+        --prompt='> ' \
         --border=none \
         --delimiter=' ' \
         --preview='tmux capture-pane -e -p -t {1}:' \
         --preview-window='right:60%:wrap' \
         --preview-label=' Preview ' \
-        --bind='?:change-header(ctrl-x kill · ctrl-n new · ctrl-r rename)' \
+        --bind='?:change-header(ctrl-x kill · ctrl-n new · ctrl-r rename · esc cancel)' \
         --bind="ctrl-x:execute-silent(${SELF} --kill {1})+reload(${SELF} --list)" \
-        --bind="ctrl-n:execute(${SELF} --new)+reload(${SELF} --list)" \
-        --bind="ctrl-r:execute(${SELF%/*}/rename-popup.sh session {1})+reload(${SELF} --list)")
+        --bind='ctrl-n:change-prompt(New session: )+clear-query' \
+        --bind='ctrl-r:change-prompt(Rename: )+clear-query' \
+        --bind='esc:change-prompt(> )+clear-query+change-header(? for help)' \
+        --bind="enter:transform:
+            if [[ \$FZF_PROMPT == 'Rename: ' ]]; then
+                echo \"execute-silent(tmux rename-session -t {1} {q})+reload(${SELF} --list)+change-prompt(> )+clear-query+change-header(? for help)\"
+            elif [[ \$FZF_PROMPT == 'New session: ' ]]; then
+                echo \"become(${SELF} --create {q})\"
+            else
+                echo accept
+            fi")
     echo "${selected%% (current)}"
 }
 
