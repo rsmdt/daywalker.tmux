@@ -37,12 +37,16 @@ jobs:
           test -x scripts/core/config.sh
           test -x scripts/core/status.sh
           test -x scripts/core/apply.sh
+          test -x scripts/core/menu.sh
           test -x scripts/modules/session.sh
           test -x scripts/modules/git.sh
           test -x scripts/modules/battery.sh
           test -x scripts/modules/datetime.sh
           test -x scripts/modules/jobs.sh
           test -x scripts/modules/ssh.sh
+          test -x scripts/modules/menu.sh
+          test -x scripts/modules/rename-popup.sh
+          test -x scripts/modules/session-picker.sh
 
       - name: Source helper functions
         run: |

@@ -102,7 +102,8 @@ _create_session() {
 # Load colors for subcommands that need them (--list)
 _load_colors
 
-# Handle subcommands
+# Handle subcommands (no default case — falls through to main picker)
+# shellcheck disable=SC2249
 case "${1:-}" in
     --list)    _list_sessions; exit 0 ;;
     --kill)    _kill_session "$2"; exit 0 ;;
@@ -180,17 +181,17 @@ pick_with_fzf() {
         --preview-label=' Preview ' \
         --bind="ctrl-/:change-header($HEADER_HELP)" \
         --bind="ctrl-x:execute-silent(${SELF} --kill {2..})+reload(${SELF} --list)" \
-        --bind="ctrl-n:change-prompt(New session: )+clear-query+change-header($HEADER_NEW)" \
-        --bind="ctrl-r:change-prompt(Rename: )+clear-query+change-header($HEADER_RENAME)" \
+        --bind="ctrl-n:change-prompt(New session: )+clear-query+disable-search+change-header($HEADER_NEW)" \
+        --bind="ctrl-r:change-prompt(Rename: )+clear-query+disable-search+change-header($HEADER_RENAME)" \
         --bind="esc:transform:
             if [[ \$FZF_PROMPT == '> ' ]]; then
                 echo abort
             else
-                echo 'change-prompt(> )+clear-query+change-header(${HEADER_HINT})'
+                echo 'change-prompt(> )+clear-query+enable-search+change-header(${HEADER_HINT})'
             fi" \
         --bind="enter:transform:
             if [[ \$FZF_PROMPT == 'Rename: ' ]]; then
-                echo \"execute-silent(tmux rename-session -t {2..} {q})+reload(${SELF} --list)+change-prompt(> )+clear-query+change-header(${HEADER_HINT})\"
+                echo \"execute-silent(tmux rename-session -t {2..} {q})+reload(${SELF} --list)+change-prompt(> )+clear-query+enable-search+change-header(${HEADER_HINT})\"
             elif [[ \$FZF_PROMPT == 'New session: ' ]]; then
                 echo \"become(${SELF} --create {q})\"
             else
