@@ -4,13 +4,33 @@
 # Uses fzf (with preview) when available, falls back to numbered list
 #
 # Subcommands (called by fzf binds):
-#   --list           List sessions with (current) marker
+#   --list           List sessions (ANSI-styled, tab-delimited)
 #   --kill <name>    Kill session, switching away if current
 #   --new            Prompt for name, create session
+#   --create [name]  Create session silently, print its name
 
 set -e
 
 SELF="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/$(basename "${BASH_SOURCE[0]}")"
+
+# ┌─────────────────────────────────────────────────────────────────────────────
+# │ Theme Colors (read from tmux options set by apply.sh)
+# └─────────────────────────────────────────────────────────────────────────────
+
+_hex_rgb() {
+    local hex="${1#\#}"
+    printf '%d;%d;%d' "0x${hex:0:2}" "0x${hex:2:2}" "0x${hex:4:2}"
+}
+
+_load_colors() {
+    _c_fg=$(tmux show-option -gqv @daywalker_color_fg 2>/dev/null)
+    _c_fg_muted=$(tmux show-option -gqv @daywalker_color_fg_muted 2>/dev/null)
+    _c_accent=$(tmux show-option -gqv @daywalker_color_accent 2>/dev/null)
+    _c_primary=$(tmux show-option -gqv @daywalker_color_primary 2>/dev/null)
+    _c_warning=$(tmux show-option -gqv @daywalker_color_warning 2>/dev/null)
+    _c_border=$(tmux show-option -gqv @daywalker_color_border 2>/dev/null)
+    _c_contrast=$(tmux show-option -gqv @daywalker_color_contrast 2>/dev/null)
+}
 
 # ┌─────────────────────────────────────────────────────────────────────────────
 # │ Subcommands (invoked by fzf --bind)
@@ -19,10 +39,23 @@ SELF="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/$(basename "${BASH_SOURCE[0]
 _list_sessions() {
     local current
     current=$(tmux display-message -p '#S')
+
+    # ANSI sequences for current session styling
+    local a_accent a_bold a_reset
+    a_accent=$(printf '\033[38;2;%sm' "$(_hex_rgb "$_c_accent")")
+    a_bold=$'\033[1m'
+    a_reset=$'\033[0m'
+
     tmux list-sessions -F '#{session_id}|#{session_name}' \
         | sort -t'|' -k1 -n \
         | cut -d'|' -f2 \
-        | sed "s/^${current}\$/${current} (current)/"
+        | while IFS= read -r name; do
+            if [[ "$name" == "$current" ]]; then
+                printf '%s󰆧%s\t%s%s%s\n' "$a_accent" "$a_reset" "$a_bold" "$name" "$a_reset"
+            else
+                printf '󰆧\t%s\n' "$name"
+            fi
+        done
 }
 
 _kill_session() {
@@ -66,6 +99,9 @@ _create_session() {
     fi
 }
 
+# Load colors for subcommands that need them (--list)
+_load_colors
+
 # Handle subcommands
 case "${1:-}" in
     --list)    _list_sessions; exit 0 ;;
@@ -91,33 +127,70 @@ format_session() {
     tmux list-sessions -F '#{session_name}|#{session_windows}|#{?session_attached,attached,}'
 }
 
+# ┌─────────────────────────────────────────────────────────────────────────────
+# │ fzf Headers (NeoVim-style: :: <key> to Action)
+# └─────────────────────────────────────────────────────────────────────────────
+
+_build_headers() {
+    local m k b r
+    m=$(printf '\033[38;2;%sm' "$(_hex_rgb "$_c_fg_muted")")   # muted
+    k=$(printf '\033[38;2;%sm' "$(_hex_rgb "$_c_warning")")     # key color
+    b=$(printf '\033[1m')                                        # bold
+    r=$(printf '\033[0m')                                        # reset
+
+    # Pattern per item: muted ":: " | key "<shortcut>" | muted " to " | bold "Action" | reset
+    HEADER_MAIN=$(printf '%s:: %s<ctrl-x> %sto %sKill%s  %s<ctrl-n> %sto %sNew%s  %s<ctrl-r> %sto %sRename%s' \
+        "$m" "$k" "$m" "$b" "$r" "$k" "$m" "$b" "$r" "$k" "$m" "$b" "$r")
+
+    HEADER_RENAME=$(printf '%s:: %s<enter> %sto %sConfirm%s  %s<esc> %sto %sCancel%s' \
+        "$m" "$k" "$m" "$b" "$r" "$k" "$m" "$b" "$r")
+
+    HEADER_NEW=$(printf '%s:: %s<enter> %sto %sCreate & Switch%s  %s<esc> %sto %sCancel%s' \
+        "$m" "$k" "$m" "$b" "$r" "$k" "$m" "$b" "$r")
+}
+
+_build_headers
+
+# ┌─────────────────────────────────────────────────────────────────────────────
+# │ fzf Color Scheme
+# └─────────────────────────────────────────────────────────────────────────────
+
+FZF_COLORS="fg:${_c_fg},bg:-1,hl:${_c_accent}"
+FZF_COLORS+=",fg+:${_c_contrast},bg+:${_c_primary},hl+:${_c_accent}"
+FZF_COLORS+=",pointer:${_c_accent},prompt:${_c_accent}"
+FZF_COLORS+=",header:${_c_fg_muted},info:${_c_fg_muted}"
+
 # shellcheck disable=SC2016
 pick_with_fzf() {
     local selected
     selected=$(echo "$sessions" | fzf \
+        --ansi \
         --reverse \
         --no-info \
-        --header='? for help' \
+        --pointer='▎' \
+        --header="$HEADER_MAIN" \
         --prompt='> ' \
         --border=none \
-        --delimiter=' ' \
-        --preview='tmux capture-pane -e -p -t {1}:' \
+        --color="$FZF_COLORS" \
+        --delimiter=$'\t' \
+        --with-nth=1.. \
+        --preview='tmux capture-pane -e -p -t {2}:' \
         --preview-window='right:60%:wrap' \
         --preview-label=' Preview ' \
-        --bind='?:change-header(ctrl-x kill · ctrl-n new · ctrl-r rename · esc cancel)' \
-        --bind="ctrl-x:execute-silent(${SELF} --kill {1})+reload(${SELF} --list)" \
-        --bind='ctrl-n:change-prompt(New session: )+clear-query' \
-        --bind='ctrl-r:change-prompt(Rename: )+clear-query' \
-        --bind='esc:change-prompt(> )+clear-query+change-header(? for help)' \
+        --bind="ctrl-x:execute-silent(${SELF} --kill {2})+reload(${SELF} --list)" \
+        --bind="ctrl-n:change-prompt(New session: )+clear-query+change-header($HEADER_NEW)" \
+        --bind="ctrl-r:change-prompt(Rename: )+clear-query+change-header($HEADER_RENAME)" \
+        --bind="esc:change-prompt(> )+clear-query+change-header($HEADER_MAIN)" \
         --bind="enter:transform:
             if [[ \$FZF_PROMPT == 'Rename: ' ]]; then
-                echo \"execute-silent(tmux rename-session -t {1} {q})+reload(${SELF} --list)+change-prompt(> )+clear-query+change-header(? for help)\"
+                echo \"execute-silent(tmux rename-session -t {2} {q})+reload(${SELF} --list)+change-prompt(> )+clear-query+change-header(${HEADER_MAIN})\"
             elif [[ \$FZF_PROMPT == 'New session: ' ]]; then
                 echo \"become(${SELF} --create {q})\"
             else
                 echo accept
             fi")
-    echo "${selected%% (current)}"
+    # Extract session name from tab-delimited output (icon\tname)
+    echo "${selected#*$'\t'}"
 }
 
 pick_with_menu() {
