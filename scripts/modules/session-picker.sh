@@ -51,9 +51,9 @@ _list_sessions() {
         | cut -d'|' -f2 \
         | while IFS= read -r name; do
             if [[ "$name" == "$current" ]]; then
-                printf '%s󰆧%s\t%s%s%s\n' "$a_accent" "$a_reset" "$a_bold" "$name" "$a_reset"
+                printf '%s󰆧 %s%s%s\n' "$a_accent" "$a_bold" "$name" "$a_reset"
             else
-                printf '󰆧\t%s\n' "$name"
+                printf '󰆧 %s\n' "$name"
             fi
         done
 }
@@ -138,8 +138,11 @@ _build_headers() {
     b=$(printf '\033[1m')                                        # bold
     r=$(printf '\033[0m')                                        # reset
 
-    # Pattern per item: muted ":: " | key "<shortcut>" | muted " to " | bold "Action" | reset
-    HEADER_MAIN=$(printf '%s:: %s<ctrl-x> %sto %sKill%s  %s<ctrl-n> %sto %sNew%s  %s<ctrl-r> %sto %sRename%s' \
+    HEADER_HINT=$(printf '%s:: %sctrl-? %sfor %shelp%s' \
+        "$m" "$k" "$m" "$b" "$r")
+
+    # Pattern per item: key "<shortcut>" | muted " to " | bold "Action" | reset
+    HEADER_HELP=$(printf '%s:: %s<ctrl-x> %sto %sKill%s  %s<ctrl-n> %sto %sNew%s  %s<ctrl-r> %sto %sRename%s' \
         "$m" "$k" "$m" "$b" "$r" "$k" "$m" "$b" "$r" "$k" "$m" "$b" "$r")
 
     HEADER_RENAME=$(printf '%s:: %s<enter> %sto %sConfirm%s  %s<esc> %sto %sCancel%s' \
@@ -155,8 +158,7 @@ _build_headers
 # │ fzf Color Scheme
 # └─────────────────────────────────────────────────────────────────────────────
 
-FZF_COLORS="fg:${_c_fg},bg:-1,hl:${_c_accent}"
-FZF_COLORS+=",fg+:${_c_contrast},bg+:${_c_primary},hl+:${_c_accent}"
+FZF_COLORS="fg:${_c_fg},bg:-1,hl:${_c_accent},hl+:${_c_accent}"
 FZF_COLORS+=",pointer:${_c_accent},prompt:${_c_accent}"
 FZF_COLORS+=",header:${_c_fg_muted},info:${_c_fg_muted}"
 
@@ -168,29 +170,34 @@ pick_with_fzf() {
         --reverse \
         --no-info \
         --pointer='▎' \
-        --header="$HEADER_MAIN" \
+        --header="$HEADER_HINT" \
         --prompt='> ' \
         --border=none \
         --color="$FZF_COLORS" \
-        --delimiter=$'\t' \
-        --with-nth=1.. \
-        --preview='tmux capture-pane -e -p -t {2}:' \
+        --delimiter=' ' \
+        --preview='tmux capture-pane -e -p -t {2..}:' \
         --preview-window='right:60%:wrap' \
         --preview-label=' Preview ' \
-        --bind="ctrl-x:execute-silent(${SELF} --kill {2})+reload(${SELF} --list)" \
+        --bind="ctrl-/:change-header($HEADER_HELP)" \
+        --bind="ctrl-x:execute-silent(${SELF} --kill {2..})+reload(${SELF} --list)" \
         --bind="ctrl-n:change-prompt(New session: )+clear-query+change-header($HEADER_NEW)" \
         --bind="ctrl-r:change-prompt(Rename: )+clear-query+change-header($HEADER_RENAME)" \
-        --bind="esc:change-prompt(> )+clear-query+change-header($HEADER_MAIN)" \
+        --bind="esc:transform:
+            if [[ \$FZF_PROMPT == '> ' ]]; then
+                echo abort
+            else
+                echo 'change-prompt(> )+clear-query+change-header(${HEADER_HINT})'
+            fi" \
         --bind="enter:transform:
             if [[ \$FZF_PROMPT == 'Rename: ' ]]; then
-                echo \"execute-silent(tmux rename-session -t {2} {q})+reload(${SELF} --list)+change-prompt(> )+clear-query+change-header(${HEADER_MAIN})\"
+                echo \"execute-silent(tmux rename-session -t {2..} {q})+reload(${SELF} --list)+change-prompt(> )+clear-query+change-header(${HEADER_HINT})\"
             elif [[ \$FZF_PROMPT == 'New session: ' ]]; then
                 echo \"become(${SELF} --create {q})\"
             else
                 echo accept
             fi")
-    # Extract session name from tab-delimited output (icon\tname)
-    echo "${selected#*$'\t'}"
+    # Extract session name (strip icon prefix)
+    echo "${selected#* }"
 }
 
 pick_with_menu() {
