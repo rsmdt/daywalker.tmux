@@ -96,8 +96,8 @@ pick_with_fzf() {
         --preview-label=' Preview ' \
         --bind='?:change-header(ctrl-x kill · ctrl-n new · ctrl-r rename)' \
         --bind="ctrl-x:execute-silent(${SELF} --kill {1})+reload(${SELF} --list)" \
-        --bind="ctrl-n:execute-silent(tmux display-popup -E -T ' New Session ' -w 50 -h 3 '${SELF} --new')+reload(${SELF} --list)" \
-        --bind="ctrl-r:execute-silent(tmux display-popup -E -T ' Rename Session: {1} ' -w 50 -h 3 '${SELF%/*}/rename-popup.sh session {1}')+reload(${SELF} --list)")
+        --bind="ctrl-n:execute(${SELF} --new)+reload(${SELF} --list)" \
+        --bind="ctrl-r:execute(${SELF%/*}/rename-popup.sh session {1})+reload(${SELF} --list)")
     echo "${selected%% (current)}"
 }
 
