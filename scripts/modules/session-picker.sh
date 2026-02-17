@@ -2,16 +2,73 @@
 # Daywalker Theme - Session Picker
 # Interactive session switcher for use inside display-popup
 # Uses fzf (with preview) when available, falls back to numbered list
+#
+# Subcommands (called by fzf binds):
+#   --list           List sessions with (current) marker
+#   --kill <name>    Kill session, switching away if current
+#   --new            Prompt for name, create session
 
 set -e
 
-current_session=$(tmux display-message -p '#S')
+SELF="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/$(basename "${BASH_SOURCE[0]}")"
 
-# List all sessions, marking the current one
-# Used by fzf bindings after mutations to reload the list
-RELOAD_CMD="tmux list-sessions -F '#{session_name}' | sed 's/^${current_session}\$/${current_session} (current)/'"
+# ┌─────────────────────────────────────────────────────────────────────────────
+# │ Subcommands (invoked by fzf --bind)
+# └─────────────────────────────────────────────────────────────────────────────
 
-sessions=$(eval "$RELOAD_CMD" || true)
+_list_sessions() {
+    local current
+    current=$(tmux display-message -p '#S')
+    tmux list-sessions -F '#{session_id}|#{session_name}' \
+        | sort -t'|' -k1 -n \
+        | cut -d'|' -f2 \
+        | sed "s/^${current}\$/${current} (current)/"
+}
+
+_kill_session() {
+    local target="$1"
+    local current
+    current=$(tmux display-message -p '#S')
+
+    if [[ "$target" == "$current" ]]; then
+        # Switch to another session before killing, otherwise tmux exits
+        local other
+        other=$(tmux list-sessions -F '#{session_id}|#{session_name}' \
+            | sort -t'|' -k1 -n \
+            | cut -d'|' -f2 \
+            | grep -v "^${target}$" | head -1 || true)
+        if [[ -n "$other" ]]; then
+            tmux switch-client -t "$other"
+            tmux kill-session -t "$target"
+        fi
+        # If no other session exists, do nothing (don't kill the last session)
+    else
+        tmux kill-session -t "$target"
+    fi
+}
+
+_new_session() {
+    printf "Session name: "
+    read -r name
+    if [[ -n "$name" ]]; then
+        tmux new-session -d -s "$name"
+    else
+        tmux new-session -d
+    fi
+}
+
+# Handle subcommands
+case "${1:-}" in
+    --list)  _list_sessions; exit 0 ;;
+    --kill)  _kill_session "$2"; exit 0 ;;
+    --new)   _new_session; exit 0 ;;
+esac
+
+# ┌─────────────────────────────────────────────────────────────────────────────
+# │ Main Picker
+# └─────────────────────────────────────────────────────────────────────────────
+
+sessions=$(_list_sessions)
 
 if [[ -z "$sessions" ]]; then
     echo "No sessions."
@@ -19,7 +76,7 @@ if [[ -z "$sessions" ]]; then
     exit 0
 fi
 
-# Format: "session_name (N windows) [attached]"
+# Format: "session_name|N_windows|attached"
 format_session() {
     tmux list-sessions -F '#{session_name}|#{session_windows}|#{?session_attached,attached,}'
 }
@@ -38,14 +95,15 @@ pick_with_fzf() {
         --preview-window='right:60%:wrap' \
         --preview-label=' Preview ' \
         --bind='?:change-header(ctrl-x kill · ctrl-n new · ctrl-r rename)' \
-        --bind="ctrl-x:execute-silent(tmux kill-session -t {1})+reload(${RELOAD_CMD})" \
-        --bind="ctrl-n:execute-silent(tmux new-session -d)+reload(${RELOAD_CMD})" \
-        --bind='ctrl-r:execute(printf "New name: " && read -r name && [ -n "$name" ] && tmux rename-session -t {1} "$name")+reload('"${RELOAD_CMD}"')')
+        --bind="ctrl-x:execute-silent(${SELF} --kill {1})+reload(${SELF} --list)" \
+        --bind="ctrl-n:execute-silent(tmux display-popup -E -T ' New Session ' -w 50 -h 3 '${SELF} --new')+reload(${SELF} --list)" \
+        --bind="ctrl-r:execute-silent(tmux display-popup -E -T ' Rename Session: {1} ' -w 50 -h 3 '${SELF%/*}/rename-popup.sh session {1}')+reload(${SELF} --list)")
     echo "${selected%% (current)}"
 }
 
 pick_with_menu() {
-    local i=1
+    local current_session i=1
+    current_session=$(tmux display-message -p '#S')
     local session_array=()
 
     while IFS='|' read -r name windows attached; do
@@ -71,7 +129,6 @@ pick_with_menu() {
     fi
 }
 
-# Pick a session — fzf if available, numbered list otherwise
 if command -v fzf &>/dev/null; then
     target=$(pick_with_fzf)
 else
