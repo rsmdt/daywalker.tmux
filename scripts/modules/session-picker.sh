@@ -82,7 +82,7 @@ _kill_session() {
 
 _new_session() {
     printf "Session name: "
-    read -r name
+    read -e -r name
     if [[ -n "$name" ]]; then
         tmux new-session -d -s "$name"
     else
@@ -183,6 +183,8 @@ pick_with_fzf() {
         --bind="ctrl-x:execute-silent(${SELF} --kill {2..})+reload(${SELF} --list)" \
         --bind="ctrl-n:change-prompt(New session: )+clear-query+disable-search+change-header($HEADER_NEW)" \
         --bind="ctrl-r:change-prompt(Rename: )+clear-query+disable-search+change-header($HEADER_RENAME)" \
+        --bind="left:backward-char" \
+        --bind="right:forward-char" \
         --bind="esc:transform:
             if [[ \$FZF_PROMPT == '> ' ]]; then
                 echo abort
@@ -222,7 +224,7 @@ pick_with_menu() {
     fi
 
     echo ""
-    read -r -p "Switch to [1-$((i - 1))]: " choice
+    read -e -r -p "Switch to [1-$((i - 1))]: " choice
 
     if [[ "$choice" =~ ^[0-9]+$ ]] && (( choice >= 1 && choice < i )); then
         echo "${session_array[$((choice - 1))]}"

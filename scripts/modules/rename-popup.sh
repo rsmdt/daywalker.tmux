@@ -10,7 +10,7 @@ target_name="${2:-}"
 
 case "$target" in
     window)
-        read -r -p "> " new_name
+        read -e -r -p "> " new_name
         if [[ -n "$new_name" ]]; then
             if [[ -n "$target_name" ]]; then
                 tmux rename-window -t "$target_name" "$new_name"
@@ -20,7 +20,7 @@ case "$target" in
         fi
         ;;
     session)
-        read -r -p "> " new_name
+        read -e -r -p "> " new_name
         if [[ -n "$new_name" ]]; then
             if [[ -n "$target_name" ]]; then
                 tmux rename-session -t "$target_name" "$new_name"
