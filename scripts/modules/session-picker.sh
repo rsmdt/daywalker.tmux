@@ -172,7 +172,7 @@ pick_with_fzf() {
         --no-info \
         --pointer='▎' \
         --header="$HEADER_HINT" \
-        --prompt='> ' \
+        --prompt='❯ ' \
         --border=none \
         --color="$FZF_COLORS" \
         --delimiter=' ' \
@@ -186,14 +186,14 @@ pick_with_fzf() {
         --bind="left:backward-char" \
         --bind="right:forward-char" \
         --bind="esc:transform:
-            if [[ \$FZF_PROMPT == '> ' ]]; then
+            if [[ \$FZF_PROMPT == '❯ ' ]]; then
                 echo abort
             else
-                echo 'change-prompt(> )+clear-query+enable-search+change-header(${HEADER_HINT})'
+                echo 'change-prompt(❯ )+clear-query+enable-search+change-header(${HEADER_HINT})'
             fi" \
         --bind="enter:transform:
             if [[ \$FZF_PROMPT == 'Rename: ' ]]; then
-                echo \"execute-silent(tmux rename-session -t {2..} {q})+reload(${SELF} --list)+change-prompt(> )+clear-query+enable-search+change-header(${HEADER_HINT})\"
+                echo \"execute-silent(tmux rename-session -t {2..} {q})+reload(${SELF} --list)+change-prompt(❯ )+clear-query+enable-search+change-header(${HEADER_HINT})\"
             elif [[ \$FZF_PROMPT == 'New session: ' ]]; then
                 echo \"become(${SELF} --create {q})\"
             else
